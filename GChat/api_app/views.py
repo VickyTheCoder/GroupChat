@@ -2,8 +2,10 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from rest_framework import status
 
+from django.contrib.auth.models import User
+
 from api_app import api
-from .serializers import UserSerializer
+from .serializers import UserSerializer, LoginSerializer
 
 class RegisterView(GenericAPIView):
     serializer_class = UserSerializer
@@ -24,3 +26,17 @@ class RegisterView(GenericAPIView):
             return Response(data, status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LoginView(GenericAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.filter(email=request.data.get('email')).first()
+            auth_token = api.get_tokens_for_user(user)
+            serializer = UserSerializer(user)
+            data = {'user': serializer.data, 'token': auth_token}
+            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 

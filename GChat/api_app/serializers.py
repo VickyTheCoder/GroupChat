@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=65,write_only=True)
@@ -41,3 +42,18 @@ class UserSerializer(serializers.ModelSerializer):
         user.email = self.validated_data.get('email')
         user.password = self.validated_data.get('password')
         return user
+
+class LoginSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+
+    def validate(self, data):
+        user = User.objects.filter(email=data['email'])
+        if user:
+            auth_user = authenticate(username=user.first().username, password=data['password'])
+            if not auth_user:
+                raise serializers.ValidationError("Please enter vaild password.")
+        else:
+            raise serializers.ValidationError("There is no account in our system for this Email.")
+        return data
+
