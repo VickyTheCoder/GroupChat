@@ -9,7 +9,6 @@ from .serializers import UserSerializer, LoginSerializer
 
 class RegisterView(GenericAPIView):
     serializer_class = UserSerializer
-
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -49,3 +48,15 @@ class UserListCreateView(ListCreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(e, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UserEditView(GenericAPIView):
+    serializer_class = UserSerializer
+    def put(self, request, pk):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.save()
+            auth_token = api.get_tokens_for_user(user)
+            data = {'user': request.data, 'token': auth_token}
+            return Response(data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
