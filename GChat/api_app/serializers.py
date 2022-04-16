@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
 
@@ -61,3 +61,18 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("There is no account in our system for this Email.")
         return data
 
+class GroupSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(max_length=100,required=True)
+    group_id = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Group
+        fields =['name','group_id']
+    
+    def get_group_id(self, data):
+        return data.id
+           
+    def validate(self, data):
+        if Group.objects.filter(name=data.get('name','')).exists():
+            raise serializers.ValidationError({'name': ["Group name already exists"]})
+        return data

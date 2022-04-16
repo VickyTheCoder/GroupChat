@@ -5,11 +5,12 @@ from rest_framework import status, permissions
 from rest_framework_filters import backends
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 from api_app import api
 from .serializers import UserSerializer, LoginSerializer
-from .filters import UserFilter
+from .serializers import GroupSerializer
+from .filters import UserFilter, GroupFilter
 
 class RegisterView(GenericAPIView):
     serializer_class = UserSerializer
@@ -80,4 +81,23 @@ class UserEditView(GenericAPIView):
             auth_token = api.get_tokens_for_user(user)
             data = {'user': request.data, 'token': auth_token}
             return Response(data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupListCreateView(ListCreateAPIView):
+    serializer_class = GroupSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = StandardResultsSetPagination
+    filter_class = GroupFilter
+    search_fields = ['name', ]
+    filter_backends = [backends.RestFrameworkFilterBackend, SearchFilter, OrderingFilter]
+    
+    def get_queryset(self):
+        return Group.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            group = serializer.save()
+            data = {'message':'Group created successfully' }
+            return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
