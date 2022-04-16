@@ -1,11 +1,15 @@
 from rest_framework.generics import GenericAPIView, ListCreateAPIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import status, permissions
+from rest_framework_filters import backends
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 from django.contrib.auth.models import User
 
 from api_app import api
 from .serializers import UserSerializer, LoginSerializer
+from .filters import UserFilter
 
 class RegisterView(GenericAPIView):
     serializer_class = UserSerializer
@@ -15,7 +19,10 @@ class RegisterView(GenericAPIView):
             user = serializer.save()
             if request.data.get('is_admin_user','').lower() == "true":
                 user.is_superuser = True
-            user.save()
+            try:
+                user.save()
+            except Exception as e:
+                return Response(f"Unable to add user: {e}", status=status.HTTP_400_BAD_REQUEST)
             auth_token = api.get_tokens_for_user(user)
             data = {'user': request.data, 'token': auth_token}
             return Response(data, status=status.HTTP_201_CREATED)
@@ -33,8 +40,22 @@ class LoginView(GenericAPIView):
             return Response(data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
 class UserListCreateView(ListCreateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = StandardResultsSetPagination
+    filter_class = UserFilter
+    search_fields = ['first_name', 'last_name','email']
+    filter_backends = [backends.RestFrameworkFilterBackend, SearchFilter, OrderingFilter]
+
+    def get_queryset(self):
+        return User.objects.all()
+
     def create(self, request, *args, **kwargs):
         try:
             serializer = self.get_serializer(data=request.data)
