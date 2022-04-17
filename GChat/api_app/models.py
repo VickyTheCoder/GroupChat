@@ -23,3 +23,18 @@ class GroupMessages(models.Model):
         verbose_name = 'GroupMessages'
         verbose_name_plural = 'GroupMessages'
         db_table = 'group_messages'
+
+class GroupMessagesLikes(models.Model):
+    liked_user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group_message = models.ForeignKey(GroupMessages, on_delete=models.CASCADE)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
+    datamode = models.CharField(max_length=10, default='A', choices=DATAMODE_CHOICES)
+
+    def __str__(self):
+        return self.liked_user
+
+    class Meta:
+        verbose_name = 'GroupMessagesLikes'
+        verbose_name_plural = 'GroupMessagesLikes'
+        db_table = 'group_message_likes'

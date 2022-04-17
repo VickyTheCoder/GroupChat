@@ -146,4 +146,15 @@ class GroupMessageListCreateView(ListCreateAPIView):
         if result:
             return Response(data, status=status.HTTP_201_CREATED)
         return Response(data, status=status.HTTP_400_BAD_REQUEST)
- 
+
+class GroupMessageLikeCreateView(GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    pagination_class = StandardResultsSetPagination
+    
+    def post(self, request, pk):
+        group_message_id = pk#self.kwargs['pk']
+        result, message, group_message = api.create_group_message_like(request,group_message_id)
+        data = {'message':message}
+        if result:
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)

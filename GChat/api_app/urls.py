@@ -3,6 +3,7 @@ from .views import RegisterView, LoginView
 from .views import UserListCreateView, UserEditView
 from .views import GroupListCreateView, GroupDeleteView
 from .views import GroupUserAddView, GroupMessageListCreateView
+from .views import GroupMessageLikeCreateView
 
 app_name='api_app'
 
@@ -16,4 +17,5 @@ urlpatterns = [
     path('group/add-user/', GroupUserAddView.as_view()),
     path('group/message/', GroupMessageListCreateView.as_view()),
     path('group/message/<str:pk>', GroupMessageListCreateView.as_view()),
+    path('group/message/like/<str:pk>', GroupMessageLikeCreateView.as_view()),
 ]
