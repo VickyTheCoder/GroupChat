@@ -71,8 +71,19 @@ class GroupSerializer(serializers.ModelSerializer):
     
     def get_group_id(self, data):
         return data.id
-           
+
     def validate(self, data):
         if Group.objects.filter(name=data.get('name','')).exists():
             raise serializers.ValidationError({'name': ["Group name already exists"]})
+        return data
+
+class GroupUserAddSerializer(serializers.Serializer):
+    group = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+
+    def validate(self, data):
+        if not Group.objects.filter(name=data.get('group','')).exists():
+            raise serializers.ValidationError("Please enter valid group")
+        if not User.objects.filter(email=data.get('email','')).exists():
+            raise serializers.ValidationError("Please enter valid email for the user")
         return data

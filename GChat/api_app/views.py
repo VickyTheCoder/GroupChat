@@ -1,4 +1,5 @@
 from rest_framework.generics import GenericAPIView, ListCreateAPIView
+from rest_framework.generics import DestroyAPIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status, permissions
@@ -9,7 +10,7 @@ from django.contrib.auth.models import User, Group
 
 from api_app import api
 from .serializers import UserSerializer, LoginSerializer
-from .serializers import GroupSerializer
+from .serializers import GroupSerializer, GroupUserAddSerializer
 from .filters import UserFilter, GroupFilter
 
 class RegisterView(GenericAPIView):
@@ -85,7 +86,7 @@ class UserEditView(GenericAPIView):
 
 class GroupListCreateView(ListCreateAPIView):
     serializer_class = GroupSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_class = GroupFilter
     search_fields = ['name', ]
@@ -100,4 +101,29 @@ class GroupListCreateView(ListCreateAPIView):
             group = serializer.save()
             data = {'message':'Group created successfully' }
             return Response(data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupDeleteView(DestroyAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def destroy(self, request, *args, **kwargs):
+        group = Group.objects.filter(name=self.kwargs['pk'])
+        if group:
+            group.delete()
+        else:
+            return Response("No Such Group", status=status.HTTP_400_BAD_REQUEST)
+        data = {'message':'Group deleted successfully' }
+        return Response(data, status=status.HTTP_200_OK)
+
+class GroupUserAddView(GenericAPIView):
+    serializer_class = GroupUserAddSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = User.objects.get(email=request.data.get('email',''))
+            group = Group.objects.get(name=request.data.get('group',''))
+            group.user_set.add(user)
+            data = {'message': 'Successfully added to the group'}
+            return Response(data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
