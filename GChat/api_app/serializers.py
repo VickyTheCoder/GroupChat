@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
+from .models import GroupMessages
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(max_length=65,write_only=True)
@@ -87,3 +88,9 @@ class GroupUserAddSerializer(serializers.Serializer):
         if not User.objects.filter(email=data.get('email','')).exists():
             raise serializers.ValidationError("Please enter valid email for the user")
         return data
+
+class GroupMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupMessages
+        fields = '__all__' 
+    

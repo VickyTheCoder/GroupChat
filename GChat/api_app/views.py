@@ -11,6 +11,8 @@ from django.contrib.auth.models import User, Group
 from api_app import api
 from .serializers import UserSerializer, LoginSerializer
 from .serializers import GroupSerializer, GroupUserAddSerializer
+from .serializers import GroupMessageSerializer
+from .models import GroupMessages
 from .filters import UserFilter, GroupFilter
 
 class RegisterView(GenericAPIView):
@@ -86,7 +88,8 @@ class UserEditView(GenericAPIView):
 
 class GroupListCreateView(ListCreateAPIView):
     serializer_class = GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_class = GroupFilter
     search_fields = ['name', ]
@@ -127,3 +130,20 @@ class GroupUserAddView(GenericAPIView):
             data = {'message': 'Successfully added to the group'}
             return Response(data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupMessageListCreateView(ListCreateAPIView):
+    permission_classes = [permissions.AllowAny]
+    pagination_class = StandardResultsSetPagination
+    serializer_class = GroupMessageSerializer
+
+    def get_queryset(self):
+        return GroupMessages.objects.filter(group=self.request.data.get('name', '')).order_by('-updated_on')
+
+    def create(self, request, *args, **kwargs):
+        group_id = self.kwargs['pk']
+        result, message, group_message = api.create_group_message(request,group_id)
+        data = {'message':message}
+        if result:
+            return Response(data, status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+ 

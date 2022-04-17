@@ -2,7 +2,7 @@ from django.urls import path
 from .views import RegisterView, LoginView
 from .views import UserListCreateView, UserEditView
 from .views import GroupListCreateView, GroupDeleteView
-from .views import GroupUserAddView
+from .views import GroupUserAddView, GroupMessageListCreateView
 
 app_name='api_app'
 
@@ -14,4 +14,6 @@ urlpatterns = [
     path('group/', GroupListCreateView.as_view()),
     path('group/delete/<str:pk>', GroupDeleteView.as_view()),
     path('group/add-user/', GroupUserAddView.as_view()),
+    path('group/message/', GroupMessageListCreateView.as_view()),
+    path('group/message/<str:pk>', GroupMessageListCreateView.as_view()),
 ]
